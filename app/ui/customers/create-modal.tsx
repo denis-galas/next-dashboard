@@ -16,7 +16,7 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
   
   return (
     <form action={formAction} aria-describedby={state.message ? 'message' : undefined} className="min-w-[600px]">
-      <div className="rounded-md bg-gray-50 p-4 md:p-6">
+      <div className="rounded-md p-4 md:p-6">
         <h1 className="mb-6 text-lg font-medium">Create Customer</h1>
         <div className="mb-4">
           <label htmlFor="name" className="mb-2 block text-sm font-medium">
