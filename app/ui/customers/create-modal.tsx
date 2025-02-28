@@ -73,6 +73,7 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
         <div className="mb-4">
           <label htmlFor="image_url" className="mb-2 block text-sm font-medium">
             Photo URL
+            <span className="text-gray-500">(Optional)</span>
           </label>
           <div className="relative mt-2 rounded-md">
             <div className="relative">
