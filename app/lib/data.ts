@@ -175,7 +175,10 @@ export async function fetchCustomers() {
         id,
         name,
         email,
-        image_url
+        image_url,
+        total_invoices,
+        total_pending,
+        total_paid
       FROM customers
       ORDER BY name ASC
     `;

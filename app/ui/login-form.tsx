@@ -11,8 +11,8 @@ import { Button } from './button';
 import { useActionState } from 'react';
 import { authenticate } from '@/app/lib/actions';
 import { useSearchParams } from 'next/navigation';
-
-
+import Link from 'next/link';
+  
 export default function LoginForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
@@ -72,6 +72,12 @@ export default function LoginForm() {
         <Button className="mt-4 w-full" aria-disabled={isPending}>
           Log in <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
         </Button>
+        <Link
+            href="/signup"
+            className="mt-4 flex items-center gap-5 self-start rounded-lg bg-white-500 px-3 py-2 text-sm text-blue-500 transition-colors hover:bg-blue-100 md:text-base"
+          >
+            <span>Sign up</span> <ArrowRightIcon className="ml-auto h-5 w-5 text-blue-500" />
+          </Link>
         <div
           className="flex h-8 items-end space-x-1"
           aria-live="polite"

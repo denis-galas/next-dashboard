@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
+import bcrypt from 'bcrypt';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -123,6 +124,93 @@ export async function authenticate(
           return 'Invalid credentials.';
         default:
           return 'Something went wrong.';
+      }
+    }
+    throw error;
+  }
+}
+
+export type SignupState = {
+  errors?: {
+    name?: string[];
+    email?: string[];
+    password?: string[];
+  };
+  values?: {
+    name?: string;
+    email?: string;
+    password?: string;
+  };
+  message?: string | null;
+};
+const SignupSchema = z.object({
+  id: z.string(),
+  name: z.string({
+    invalid_type_error: 'Please enter a name.',
+  }),
+  email: z.string({
+    invalid_type_error: 'Please enter an email address.',
+  }).email({
+    message: 'Please enter a valid email address.',
+  }).refine(async (email) => {
+    const existingUser = await sql`SELECT email FROM users WHERE email = ${email}`;
+    return existingUser.length === 0;
+  }, {
+    message: 'User with this email already exists in database'
+  }),
+  password: z.string({
+    invalid_type_error: 'Please enter a password.',
+  }).min(6, {
+    message: 'Password must be at least 6 characters long.',
+  })
+});
+const SignupFormSchema = SignupSchema.omit({ id: true });
+
+export async function signup(prevState: SignupState, formData: FormData) {
+  const validatedFields = await SignupFormSchema.safeParseAsync({
+    name: formData.get('name'),
+    email: formData.get('email'),
+    password: formData.get('password'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      values: Object.fromEntries(formData.entries()),
+      message: 'Missing Fields. Failed to Signup.',
+    };
+  }
+
+  const { name, email, password } = validatedFields.data;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await sql`
+      INSERT INTO users (name, email, password)
+      VALUES (${name}, ${email}, ${hashedPassword})
+    `;
+
+  } catch (error) {
+    console.error(error);
+
+    return {
+      message: 'Database Error: Failed to Signup.',
+    };
+  }
+
+  try {
+    await signIn('credentials', formData);
+  } catch (error) {
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case 'CredentialsSignin':
+          return {
+            message: 'Invalid credentials.',
+          };
+        default:
+          return {
+            message: 'Something went wrong.',
+          };
       }
     }
     throw error;
