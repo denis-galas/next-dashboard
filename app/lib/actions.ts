@@ -224,3 +224,82 @@ export async function signup(prevState: SignupState | undefined, formData: FormD
     throw error;
   }
 }
+
+export type CustomerState = {
+  errors?: {
+    name?: string[];
+    email?: string[];
+    image_url?: string[];
+  };
+  values?: {
+    name?: string;
+    email?: string;
+    image_url?: string;
+  };
+  message?: string | null;
+};
+
+const CreateCustomerFormSchema = z.object({
+  id: z.string(),
+  name: z.string({
+    invalid_type_error: 'Please enter a name.',
+  }).refine(async (name) => {
+    const existingCustomer = await sql`SELECT name FROM customers WHERE name = ${name}`;
+    return existingCustomer.length === 0;
+  }, {
+    message: 'Customer with this name already exists in database'
+  }),
+  email: z.string({
+    invalid_type_error: 'Please enter an email address.',
+  }).email({
+    message: 'Please enter a valid email address.',
+  }),
+  image_url: z.string({
+    invalid_type_error: 'Please enter an image URL.',
+  }).refine(
+    (val) => val === '' || z.string().url().safeParse(val).success,
+    { message: 'Please enter a valid URL or leave it empty' }
+  ).optional(),
+});
+
+const CreateCustomerSchema = CreateCustomerFormSchema.omit({ id: true }); 
+
+export async function createCustomer(prevState: CustomerState | undefined, formData: FormData) {
+  const validatedFields = await CreateCustomerSchema.safeParseAsync({
+    name: formData.get('name'),
+    email: formData.get('email'),
+    image_url: formData.get('image_url'),
+  });
+
+  console.log(validatedFields, Object.fromEntries(formData.entries()));
+
+  if (!validatedFields.success) {
+    prevState = {
+      errors: validatedFields.error.flatten().fieldErrors,
+      values: Object.fromEntries(formData.entries()),
+      message: 'Failed to Create Customer.',
+    };
+
+    return prevState;
+  }
+
+  const { name, email, image_url } = validatedFields.data;
+
+  try {
+    await sql`
+      INSERT INTO customers (name, email, image_url)
+      VALUES (${name}, ${email}, ${image_url || ''})
+    `;
+  } catch (error) {
+    console.error(error);
+
+    prevState = {
+      message: 'Database Error: Failed to Create Customer.',
+    };
+
+    return prevState;
+  }
+
+  revalidatePath('/dashboard/customers');
+  redirect('/dashboard/customers');
+}
