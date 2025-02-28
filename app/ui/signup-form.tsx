@@ -16,7 +16,7 @@ export default function SignupForm() {
   const callbackUrl = '/dashboard';
   const [state, formAction] = useActionState(
     signup,
-    initialState,
+    initialState
   );
 
   return (

@@ -166,7 +166,7 @@ const SignupSchema = z.object({
 });
 const SignupFormSchema = SignupSchema.omit({ id: true });
 
-export async function signup(prevState: SignupState, formData: FormData) {
+export async function signup(prevState: SignupState | undefined, formData: FormData) {
   const validatedFields = await SignupFormSchema.safeParseAsync({
     name: formData.get('name'),
     email: formData.get('email'),
@@ -174,11 +174,13 @@ export async function signup(prevState: SignupState, formData: FormData) {
   });
 
   if (!validatedFields.success) {
-    return {
+    prevState = {
       errors: validatedFields.error.flatten().fieldErrors,
       values: Object.fromEntries(formData.entries()),
       message: 'Missing Fields. Failed to Signup.',
     };
+
+    return prevState;
   }
 
   const { name, email, password } = validatedFields.data;
@@ -193,9 +195,11 @@ export async function signup(prevState: SignupState, formData: FormData) {
   } catch (error) {
     console.error(error);
 
-    return {
+    prevState = {
       message: 'Database Error: Failed to Signup.',
     };
+
+    return prevState;
   }
 
   try {
@@ -204,13 +208,17 @@ export async function signup(prevState: SignupState, formData: FormData) {
     if (error instanceof AuthError) {
       switch (error.type) {
         case 'CredentialsSignin':
-          return {
+          prevState = {
             message: 'Invalid credentials.',
           };
+      
+          return prevState;
         default:
-          return {
+          prevState = {
             message: 'Something went wrong.',
           };
+
+          return prevState;
       }
     }
     throw error;

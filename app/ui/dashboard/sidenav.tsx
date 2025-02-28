@@ -6,7 +6,6 @@ import { signOut, auth } from '@/auth';
 
 export default async function SideNav() {
   const user = await auth();
-  console.log(user);
 
   return (
     <div className="flex h-full flex-col px-3 py-4 md:px-2">
