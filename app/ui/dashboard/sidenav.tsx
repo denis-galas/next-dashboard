@@ -24,7 +24,7 @@ export default async function SideNav() {
           'use server';
           await signOut();
         }}>
-          <p className="text-sm font-medium p-3">
+          <p className="text-sm font-medium p-3 hidden md:block">
             Hello,
             <span className="text-blue-500">
               {user?.user?.name}

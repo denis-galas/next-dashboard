@@ -13,9 +13,12 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
   };
 
   const [state, formAction] = useActionState(createCustomer, initialState);
-  
+
   return (
-    <form action={formAction} aria-describedby={state.message ? 'message' : undefined} className="min-w-[600px]">
+    <form action={formAction}
+      aria-describedby={state.message ? 'message' : undefined}
+      className="min-w-[300px] max-h-[90vh] overflow-y-auto md:min-w-[600px] md:max-h-[70vh]"
+    >
       <div className="rounded-md p-4 md:p-6">
         <h1 className="mb-6 text-lg font-medium">Create Customer</h1>
         <div className="mb-4">
@@ -73,7 +76,7 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
         <div className="mb-4">
           <label htmlFor="image_url" className="mb-2 block text-sm font-medium">
             Photo URL
-            <span className="text-gray-500">(Optional)</span> 
+            <span className="text-gray-500">(Optional)</span>
           </label>
           <div className="relative mt-2 rounded-md">
             <div className="relative">
