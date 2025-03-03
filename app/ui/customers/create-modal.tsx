@@ -1,9 +1,8 @@
 'use client'
 import { UserIcon, EnvelopeIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { Button } from "../button";
-import { useActionState } from "react";
+import { useActionState, useRef } from "react";
 import { CustomerState, createCustomer } from "@/app/lib/actions";
-
 
 export default function CreateCustomerModal({ onClose }: { onClose: () => void }) {
   const initialState: CustomerState = {
@@ -11,6 +10,19 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
     values: {},
     message: null,
   };
+
+  const imageInput = useRef<HTMLInputElement>(null);
+
+  function handleImageUploadValidation() {
+    const file_size = imageInput.current?.files?.[0].size ? imageInput.current?.files?.[0].size : 0;
+    if (file_size >= 4 * 1024 * 1024) {
+      document.getElementById('image-filesize-error-message')?.classList.remove('hidden');
+      document.getElementById('create-customer-button')?.setAttribute('aria-disabled', 'true');
+    } else {
+      document.getElementById('image-filesize-error-message')?.classList.add('hidden');
+      document.getElementById('create-customer-button')?.setAttribute('aria-disabled', 'false');
+    }
+  }
 
   const [state, formAction, isPending] = useActionState(createCustomer, initialState);
 
@@ -76,7 +88,7 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
         <div className="mb-4">
           <label htmlFor="image" className="mb-2 block text-sm font-medium">
             Photo 
-            <span className="text-gray-500">(Optional)</span>
+            <span className="text-gray-500">(Optional, 4mb max)</span>
           </label>
           <div className="relative mt-2 rounded-md">
             <div className="relative">
@@ -85,14 +97,16 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
                 name="image"
                 type="file"
                 accept="image/*"
-                max={4 * 1024 * 1024}
                 placeholder="Enter image URL"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                 aria-describedby="image-error"
+                onChange={handleImageUploadValidation}
+                ref={imageInput}
               />
               <PhotoIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
             <div id="image-error" aria-live="polite" aria-atomic="true">
+              <p className="mt-2 text-sm text-red-500 hidden" id="image-filesize-error-message">File size must be less than 4mb</p>
               {state.errors?.image &&
                 state.errors.image.map((error: string) => (
                   <p className="mt-2 text-sm text-red-500" key={error}>{error}</p>
@@ -109,7 +123,7 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
           <button type="button"
             className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
             onClick={onClose}>Close</button>
-          <Button type="submit" aria-disabled={isPending}>Create Customer</Button>
+          <Button type="submit" id="create-customer-button" aria-disabled={isPending}>Create Customer</Button>
         </div>
       </div>
 
