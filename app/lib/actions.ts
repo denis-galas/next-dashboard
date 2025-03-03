@@ -262,7 +262,7 @@ const CreateCustomerFormSchema = z.object({
     }, 'File must be an image (JPEG, PNG or WebP)')
     .refine((file) => {
       if (!file) return true; // Allow empty
-      return file.size <= 20 * 1024 * 1024; // 20MB limit
+      return file.size <= 4 * 1024 * 1024; // 20MB limit
     }, 'File size must be less than 20MB')
     .optional(),
 });
