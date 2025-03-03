@@ -14,7 +14,7 @@ import { signup, SignupState } from '@/app/lib/actions';
 export default function SignupForm() {
   const initialState: SignupState = { message: null, errors: {}, values: {} };
   const callbackUrl = '/dashboard';
-  const [state, formAction] = useActionState(
+  const [state, formAction, isPending] = useActionState(
     signup,
     initialState
   );
@@ -116,7 +116,7 @@ export default function SignupForm() {
           </div>
         </div>
         <input type="hidden" name="redirectTo" value={callbackUrl} />
-        <Button className="mt-4 w-full">
+        <Button className="mt-4 w-full" aria-disabled={isPending}>
           Sign up <ArrowRightIcon className="ml-auto h-5 w-5 text-gray-50" />
         </Button>
         <div
