@@ -74,26 +74,26 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
           </div>
         </div>
         <div className="mb-4">
-          <label htmlFor="image_url" className="mb-2 block text-sm font-medium">
-            Photo URL
+          <label htmlFor="image" className="mb-2 block text-sm font-medium">
+            Photo 
             <span className="text-gray-500">(Optional)</span>
           </label>
           <div className="relative mt-2 rounded-md">
             <div className="relative">
               <input
-                id="image_url"
-                name="image_url"
-                type="url"
+                id="image"
+                name="image"
+                type="file"
+                accept="image/*"
                 placeholder="Enter image URL"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
-                aria-describedby="image_url-error"
-                defaultValue={typeof state?.values?.image_url === 'string' ? state?.values?.image_url : ''}
+                aria-describedby="image-error"
               />
               <PhotoIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
-            <div id="image_url-error" aria-live="polite" aria-atomic="true">
-              {state.errors?.image_url &&
-                state.errors.image_url.map((error: string) => (
+            <div id="image-error" aria-live="polite" aria-atomic="true">
+              {state.errors?.image &&
+                state.errors.image.map((error: string) => (
                   <p className="mt-2 text-sm text-red-500" key={error}>{error}</p>
                 ))}
             </div>

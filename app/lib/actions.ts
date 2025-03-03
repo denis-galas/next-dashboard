@@ -7,6 +7,8 @@ import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import bcrypt from 'bcrypt';
+import fs from 'fs';
+import path from 'path';
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -211,7 +213,7 @@ export async function signup(prevState: SignupState | undefined, formData: FormD
           prevState = {
             message: 'Invalid credentials.',
           };
-      
+
           return prevState;
         default:
           prevState = {
@@ -229,12 +231,11 @@ export type CustomerState = {
   errors?: {
     name?: string[];
     email?: string[];
-    image_url?: string[];
+    image?: string[];
   };
   values?: {
     name?: string;
     email?: string;
-    image_url?: string;
   };
   message?: string | null;
 };
@@ -254,24 +255,26 @@ const CreateCustomerFormSchema = z.object({
   }).email({
     message: 'Please enter a valid email address.',
   }),
-  image_url: z.string({
-    invalid_type_error: 'Please enter an image URL.',
-  }).refine(
-    (val) => val === '' || z.string().url().safeParse(val).success,
-    { message: 'Please enter a valid URL or leave it empty' }
-  ).optional(),
+  image: z.instanceof(File)
+    .refine((file) => {
+      if (!file.size) return true; // Allow empty
+      return ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type);
+    }, 'File must be an image (JPEG, PNG or WebP)')
+    .refine((file) => {
+      if (!file) return true; // Allow empty
+      return file.size <= 20 * 1024 * 1024; // 20MB limit
+    }, 'File size must be less than 20MB')
+    .optional(),
 });
 
-const CreateCustomerSchema = CreateCustomerFormSchema.omit({ id: true }); 
+const CreateCustomerSchema = CreateCustomerFormSchema.omit({ id: true });
 
 export async function createCustomer(prevState: CustomerState | undefined, formData: FormData) {
   const validatedFields = await CreateCustomerSchema.safeParseAsync({
     name: formData.get('name'),
     email: formData.get('email'),
-    image_url: formData.get('image_url'),
+    image: formData.get('image'),
   });
-
-  console.log(validatedFields, Object.fromEntries(formData.entries()));
 
   if (!validatedFields.success) {
     prevState = {
@@ -283,18 +286,26 @@ export async function createCustomer(prevState: CustomerState | undefined, formD
     return prevState;
   }
 
-  const { name, email, image_url } = validatedFields.data;
+  const { name, email, image } = validatedFields.data;
 
   try {
+    let image_url = '';
+    if (image && image instanceof File && image.size > 0) {
+      image_url = `/customers/${image.name}`;
+      const imagePath = path.join(process.cwd(), 'public', image_url);
+      const buffer = Buffer.from(await image.arrayBuffer());
+      fs.writeFileSync(imagePath, buffer);
+    }
+
     await sql`
       INSERT INTO customers (name, email, image_url)
-      VALUES (${name}, ${email}, ${image_url || ''})
+        VALUES (${name}, ${email}, ${image_url})
     `;
   } catch (error) {
     console.error(error);
 
     prevState = {
-      message: 'Database Error: Failed to Create Customer.',
+      message: 'Submit Error: Failed to Create Customer.',
     };
 
     return prevState;
