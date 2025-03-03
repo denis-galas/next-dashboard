@@ -17,9 +17,11 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
     const file_size = imageInput.current?.files?.[0].size ? imageInput.current?.files?.[0].size : 0;
     if (file_size >= 4 * 1024 * 1024) {
       document.getElementById('image-filesize-error-message')?.classList.remove('hidden');
+      document.getElementById('create-customer-button')?.setAttribute('disabled', 'disabled');
       document.getElementById('create-customer-button')?.setAttribute('aria-disabled', 'true');
     } else {
       document.getElementById('image-filesize-error-message')?.classList.add('hidden');
+      document.getElementById('create-customer-button')?.removeAttribute('disabled');
       document.getElementById('create-customer-button')?.setAttribute('aria-disabled', 'false');
     }
   }
