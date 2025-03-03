@@ -7,8 +7,8 @@ import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import bcrypt from 'bcrypt';
-import fs from 'fs';
-import path from 'path';
+import { put } from '@vercel/blob';
+
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
 
@@ -292,9 +292,13 @@ export async function createCustomer(prevState: CustomerState | undefined, formD
     let image_url = '';
     if (image && image instanceof File && image.size > 0) {
       image_url = `/customers/${image.name}`;
-      const imagePath = path.join(process.cwd(), 'public', image_url);
-      const buffer = Buffer.from(await image.arrayBuffer());
-      fs.writeFileSync(imagePath, buffer);
+
+      const upload_response = await put(image_url, image, {
+        access: 'public',
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      });
+
+      image_url = upload_response.url;
     }
 
     await sql`

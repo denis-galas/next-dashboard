@@ -76,7 +76,7 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
         <div className="mb-4">
           <label htmlFor="image" className="mb-2 block text-sm font-medium">
             Photo 
-            <span className="text-gray-500">(Optional, 4mb max)</span>
+            <span className="text-gray-500">(Optional)</span>
           </label>
           <div className="relative mt-2 rounded-md">
             <div className="relative">
@@ -85,7 +85,7 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
                 name="image"
                 type="file"
                 accept="image/*"
-                max={4 * 1024 * 1024}
+                max={20 * 1024 * 1024}
                 placeholder="Enter image URL"
                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                 aria-describedby="image-error"
