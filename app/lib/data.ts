@@ -190,10 +190,12 @@ export async function fetchCustomers() {
   }
 }
 
-export async function fetchFilteredCustomers(query: string) {
+export type SortBy = 'name' | 'email' | 'total_invoices' | 'total_pending' | 'total_paid';
+export type SortOrder = 'asc' | 'desc';
+
+export async function fetchFilteredCustomers(query: string, sortBy: SortBy, sortOrder: SortOrder) {
   try {
-    const data = await sql<CustomersTableType[]>`
-		SELECT
+    const data = await sql<CustomersTableType[]>`SELECT
 		  customers.id,
 		  customers.name,
 		  customers.email,
@@ -207,8 +209,16 @@ export async function fetchFilteredCustomers(query: string) {
 		  customers.name ILIKE ${`%${query}%`} OR
         customers.email ILIKE ${`%${query}%`}
 		GROUP BY customers.id, customers.name, customers.email, customers.image_url
-		ORDER BY customers.name ASC
-	  `;
+		ORDER BY 
+		CASE ${sortBy}
+		  WHEN 'name' THEN customers.name
+		  WHEN 'email' THEN customers.email
+		  WHEN 'total_invoices' THEN COUNT(invoices.id)::text
+		  WHEN 'total_pending' THEN SUM(CASE WHEN invoices.status = 'pending' THEN invoices.amount ELSE 0 END)::text
+		  WHEN 'total_paid' THEN SUM(CASE WHEN invoices.status = 'paid' THEN invoices.amount ELSE 0 END)::text
+		  ELSE customers.name
+		END ${sortOrder === 'asc' ? sql`ASC` : sql`DESC`}
+	  `  ;
 
     const customers = data.map((customer) => ({
       ...customer,
