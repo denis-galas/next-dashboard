@@ -5,6 +5,7 @@ import {
 import { UserCircleIcon } from '@heroicons/react/24/outline';
 import { fetchFilteredCustomers, SortBy, SortOrder } from '@/app/lib/data';
 import TableHeader from './table-header';
+import { DeleteCustomer } from './buttons';
 
 export default async function CustomersTable({
   currentPage,
@@ -29,6 +30,7 @@ export default async function CustomersTable({
     total_pending: customer.total_pending,
     total_paid: customer.total_paid,
   })) as FormattedCustomersTable[];
+  const customersNumber = customers.length;
 
   return (
     <div className="mt-6 flow-root">
@@ -113,6 +115,11 @@ export default async function CustomersTable({
                     </td>
                     <td className="whitespace-nowrap bg-white px-4 py-5 text-sm group-first-of-type:rounded-md group-last-of-type:rounded-md">
                       {customer.total_paid}
+                    </td>
+                    <td className="whitespace-nowrap bg-white py-3 pl-6 pr-3">
+                      <div className="flex justify-end gap-3">
+                        <DeleteCustomer id={customer.id} customersNumber={customersNumber} />
+                      </div>
                     </td>
                   </tr>
                 ))}

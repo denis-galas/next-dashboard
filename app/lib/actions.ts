@@ -7,7 +7,7 @@ import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import bcrypt from 'bcrypt';
-import { put } from '@vercel/blob';
+import { put, del } from '@vercel/blob';
 
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
@@ -317,4 +317,21 @@ export async function createCustomer(prevState: CustomerState | undefined, formD
 
   revalidatePath('/dashboard/customers');
   redirect('/dashboard/customers');
+}
+
+export async function deleteCustomer(id: string) {
+  try {
+    const customer = await sql`SELECT image_url FROM customers WHERE id = ${id}`;
+    const deletePromises = [
+      customer[0].image_url &&
+      del(customer[0].image_url, {
+        token: process.env.BLOB_READ_WRITE_TOKEN,
+      }),
+      sql`DELETE FROM customers WHERE id = ${id}`
+    ].filter(Boolean);
+
+    await Promise.all(deletePromises);
+  } catch (error) {
+    console.error(error);
+  }
 }
