@@ -330,8 +330,6 @@ export async function createCustomer(prevState: CustomerState | undefined, formD
 
 const UpdateCustomerSchema = CreateCustomerFormSchema.omit({ id: true, image: true });
 export async function updateCustomer(id: string, prevState: CustomerState | undefined, formData: FormData) {
-  console.log('--------------------------------');
-  console.log(formData);
   const validatedFields = await UpdateCustomerSchema.safeParseAsync({
     name: formData.get('name'),
     email: formData.get('email'),

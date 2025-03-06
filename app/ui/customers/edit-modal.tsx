@@ -1,16 +1,26 @@
-'use client'
 import { UserIcon, EnvelopeIcon } from "@heroicons/react/24/outline";
 import { Button } from "../button";
-import { useActionState } from "react";
+import { useActionState, useState, useEffect } from "react";
 import { CustomerState, updateCustomer } from "@/app/lib/actions";
-import { FormattedCustomersTable } from "@/app/lib/definitions";
+import { CustomerField, FormattedCustomersTable } from "@/app/lib/definitions";
 
 export default function EditCustomerModal({ customer, onClose }: { customer: FormattedCustomersTable, onClose: () => void }) {
+
+    const [customerData, setCustomerData] = useState<CustomerField | null>(null);
+
+    useEffect(() => {
+        fetch(`/api/customers/${customer.id}`)
+          .then(res => res.json())
+          .then((data: CustomerField) => {
+            setCustomerData(data);
+          });
+      }, [customer.id]);
+
     const initialState: CustomerState = {
         errors: {},
         values: {
-            name: customer.name,
-            email: customer.email,
+            name: customerData?.name,
+            email: customerData?.email,
             //image: customer.image_url,
         },
         message: null,
@@ -24,9 +34,10 @@ export default function EditCustomerModal({ customer, onClose }: { customer: For
             aria-describedby={state?.message ? 'message' : undefined}
             className="min-w-[300px] max-h-[90vh] overflow-y-auto md:min-w-[600px] md:max-h-[70vh]"
         >
-            <div className="rounded-md p-4 md:p-6">
-                <h1 className="mb-6 text-lg font-medium">Edit Customer</h1>
-                <div className="mb-4">
+            {!customerData ? (<div className="flex justify-center items-center h-full">Loading...</div>) : (
+                <div className="rounded-md p-4 md:p-6">
+                    <h1 className="mb-6 text-lg font-medium">Edit Customer</h1>
+                    <div className="mb-4">
                     <label htmlFor="name" className="mb-2 block text-sm font-medium">
                         Name
                     </label>
@@ -40,7 +51,7 @@ export default function EditCustomerModal({ customer, onClose }: { customer: For
                                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                                 aria-describedby="name-error"
                                 required
-                                defaultValue={typeof state?.values?.name === 'string' ? state?.values?.name : ''}
+                                defaultValue={typeof state?.values?.name === 'string' ? state?.values?.name : customerData?.name}
                             />
                             <UserIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
                         </div>
@@ -66,7 +77,7 @@ export default function EditCustomerModal({ customer, onClose }: { customer: For
                                 className="peer block w-full rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-gray-500"
                                 aria-describedby="email-error"
                                 required
-                                defaultValue={typeof state?.values?.email === 'string' ? state?.values?.email : ''}
+                                defaultValue={typeof state?.values?.email === 'string' ? state?.values?.email : customerData?.email}
                             />
                             <EnvelopeIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
                         </div>
@@ -119,6 +130,7 @@ export default function EditCustomerModal({ customer, onClose }: { customer: For
                     <Button type="submit" id="edit-customer-button" disabled={isPending} aria-disabled={isPending}>Edit Customer</Button>
                 </div>
             </div>
+            )}
 
 
         </form>
