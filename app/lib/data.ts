@@ -175,10 +175,7 @@ export async function fetchCustomers() {
         id,
         name,
         email,
-        image_url,
-        total_invoices,
-        total_pending,
-        total_paid
+        image_url
       FROM customers
       ORDER BY name ASC
     `;
@@ -249,5 +246,17 @@ export async function fetchCustomersPages(query: string) {
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to fetch total number of customers.');
+  }
+}
+
+export async function fetchCustomerById(id: string) {
+  try {
+    const data = await sql<CustomerField[]>`
+      SELECT * FROM customers WHERE id = ${id};
+    `;
+    return data[0];
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to fetch customer by id.');
   }
 }

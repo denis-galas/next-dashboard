@@ -5,7 +5,7 @@ import {
 import { UserCircleIcon } from '@heroicons/react/24/outline';
 import { fetchFilteredCustomers, SortBy, SortOrder } from '@/app/lib/data';
 import TableHeader from './table-header';
-import { DeleteCustomer } from './buttons';
+import { DeleteCustomer, UpdateCustomer } from './buttons';
 
 export default async function CustomersTable({
   currentPage,
@@ -118,6 +118,7 @@ export default async function CustomersTable({
                     </td>
                     <td className="whitespace-nowrap bg-white py-3 pl-6 pr-3">
                       <div className="flex justify-end gap-3">
+                        <UpdateCustomer customer={customer} />
                         <DeleteCustomer id={customer.id} customersNumber={customersNumber} />
                       </div>
                     </td>

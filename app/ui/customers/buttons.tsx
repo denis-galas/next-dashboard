@@ -1,12 +1,15 @@
 'use client';
 
 import { Button } from '@/app/ui/button';
-import { PlusIcon, TrashIcon, ArrowPathIcon } from "@heroicons/react/24/outline";
+import { PlusIcon, TrashIcon, ArrowPathIcon, PencilIcon } from "@heroicons/react/24/outline";
 import { AddCustomerModal } from "./modals";
 import { useState } from "react";
 import CreateCustomerModal from "./create-modal";
 import { deleteCustomer } from '@/app/lib/actions';
 import { usePathname, useSearchParams, useRouter } from 'next/navigation';
+import EditCustomerModal from "./edit-modal";
+import { FormattedCustomersTable } from '@/app/lib/definitions';
+
 
 export function CreateCustomer() {
   const [isOpen, setIsOpen] = useState(false);
@@ -19,11 +22,13 @@ export function CreateCustomer() {
         <span className="hidden md:block">Create Customer</span>{' '}
         <PlusIcon className="h-5 md:ml-4" />
       </Button>
+      {isOpen && (
       <AddCustomerModal isOpen={isOpen} onClose={() => setIsOpen(false)}>
         <div className="modal rounded-md border-blue-500">
           <CreateCustomerModal onClose={() => setIsOpen(false)} />
         </div>
-      </AddCustomerModal>
+        </AddCustomerModal>
+      )}
     </>
   );
 }
@@ -61,5 +66,27 @@ export function DeleteCustomer({ id, customersNumber }: { id: string, customersN
         </button>
       )}
     </form>
+  );
+}
+
+export function UpdateCustomer({ customer }: { customer: FormattedCustomersTable }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        onClick={() => setIsOpen(true)}
+        className="rounded-md border p-2 hover:bg-gray-100"
+      >
+        <PencilIcon className="w-5" />
+      </button>
+      {isOpen && (
+        <AddCustomerModal isOpen={isOpen} onClose={() => setIsOpen(false)}>
+          <div className="modal rounded-md border-blue-500">
+            <EditCustomerModal customer={customer} onClose={() => setIsOpen(false)} />
+          </div>
+        </AddCustomerModal>
+      )}
+    </>
   );
 }

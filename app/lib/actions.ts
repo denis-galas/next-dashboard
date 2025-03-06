@@ -8,6 +8,7 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import bcrypt from 'bcrypt';
 import { put, del } from '@vercel/blob';
+import { headers } from 'next/headers';
 
 
 const sql = postgres(process.env.POSTGRES_URL!, { ssl: 'require' });
@@ -244,11 +245,6 @@ const CreateCustomerFormSchema = z.object({
   id: z.string(),
   name: z.string({
     invalid_type_error: 'Please enter a name.',
-  }).refine(async (name) => {
-    const existingCustomer = await sql`SELECT name FROM customers WHERE name = ${name}`;
-    return existingCustomer.length === 0;
-  }, {
-    message: 'Customer with this name already exists in database'
   }),
   email: z.string({
     invalid_type_error: 'Please enter an email address.',
@@ -287,6 +283,17 @@ export async function createCustomer(prevState: CustomerState | undefined, formD
   }
 
   const { name, email, image } = validatedFields.data;
+  // Check for duplicate name here
+  const existingCustomer = await sql`SELECT name FROM customers WHERE name = ${name}`;
+  if (existingCustomer.length > 0) {
+    prevState = {
+      errors: { name: ['Customer with this name already exists in database'] },
+      values: Object.fromEntries(formData.entries()),
+      message: 'Failed to Create Customer.',
+    };
+
+    return prevState;
+  }
 
   try {
     let image_url = '';
@@ -316,7 +323,61 @@ export async function createCustomer(prevState: CustomerState | undefined, formD
   }
 
   revalidatePath('/dashboard/customers');
-  redirect('/dashboard/customers');
+  const headersList = await headers();
+  const referer = headersList.get('referer') || '/dashboard/customers';
+  redirect(referer);
+}
+
+const UpdateCustomerSchema = CreateCustomerFormSchema.omit({ id: true, image: true });
+export async function updateCustomer(id: string, prevState: CustomerState | undefined, formData: FormData) {
+  console.log('--------------------------------');
+  console.log(formData);
+  const validatedFields = await UpdateCustomerSchema.safeParseAsync({
+    name: formData.get('name'),
+    email: formData.get('email'),
+   // image: formData.get('image'),
+  });
+
+  if (!validatedFields.success) {
+    prevState = {
+      errors: validatedFields.error.flatten().fieldErrors,
+      values: Object.fromEntries(formData.entries()),
+      message: 'Failed to Update Customer.',
+    };
+
+    return prevState;
+  }
+
+  const { name, email } = validatedFields.data;
+  //Check for duplicate name here
+  const existingCustomer = await sql`SELECT name FROM customers WHERE name = ${name} AND id != ${id}`;
+  if (existingCustomer.length > 0) {
+    prevState = {
+      errors: { name: ['Customer with this name already exists in database'] },
+      values: Object.fromEntries(formData.entries()),
+      message: 'Failed to Update Customer.',
+    };
+
+    return prevState;
+  }
+
+  try {
+    await sql`UPDATE customers SET name = ${name}, email = ${email} WHERE id = ${id}`;
+
+  } catch (error) {
+    console.error(error);
+
+    prevState = {
+      message: 'Submit Error: Failed to Update Customer.',
+    };
+
+    return prevState;
+  }
+
+  revalidatePath('/dashboard/customers');
+  const headersList = await headers();
+  const referer = headersList.get('referer') || '/dashboard/customers';
+  redirect(referer);
 }
 
 export async function deleteCustomer(id: string) {

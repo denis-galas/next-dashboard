@@ -1,7 +1,7 @@
 'use client'
 import { UserIcon, EnvelopeIcon, PhotoIcon } from "@heroicons/react/24/outline";
 import { Button } from "../button";
-import { useActionState, useRef } from "react";
+import { useActionState, useRef, useState } from "react";
 import { CustomerState, createCustomer } from "@/app/lib/actions";
 
 export default function CreateCustomerModal({ onClose }: { onClose: () => void }) {
@@ -13,16 +13,14 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
 
   const imageInput = useRef<HTMLInputElement>(null);
 
+  const [isInvalidImage, setIsInvalidImage] = useState(false);
+
   function handleImageUploadValidation() {
     const file_size = imageInput.current?.files?.[0].size ? imageInput.current?.files?.[0].size : 0;
     if (file_size >= 4 * 1024 * 1024) {
-      document.getElementById('image-filesize-error-message')?.classList.remove('hidden');
-      document.getElementById('create-customer-button')?.setAttribute('disabled', 'disabled');
-      document.getElementById('create-customer-button')?.setAttribute('aria-disabled', 'true');
+      setIsInvalidImage(true);
     } else {
-      document.getElementById('image-filesize-error-message')?.classList.add('hidden');
-      document.getElementById('create-customer-button')?.removeAttribute('disabled');
-      document.getElementById('create-customer-button')?.setAttribute('aria-disabled', 'false');
+      setIsInvalidImage(false);
     }
   }
 
@@ -108,7 +106,7 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
               <PhotoIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-gray-900" />
             </div>
             <div id="image-error" aria-live="polite" aria-atomic="true">
-              <p className="mt-2 text-sm text-red-500 hidden" id="image-filesize-error-message">File size must be less than 4mb</p>
+              <p className={`mt-2 text-sm text-red-500 ${isInvalidImage ? '' : 'hidden'}`} id="image-filesize-error-message">File size must be less than 4mb</p>
               {state.errors?.image &&
                 state.errors.image.map((error: string) => (
                   <p className="mt-2 text-sm text-red-500" key={error}>{error}</p>
@@ -125,7 +123,7 @@ export default function CreateCustomerModal({ onClose }: { onClose: () => void }
           <button type="button"
             className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
             onClick={onClose}>Close</button>
-          <Button type="submit" id="create-customer-button" aria-disabled={isPending}>Create Customer</Button>
+          <Button type="submit" id="create-customer-button" disabled={isPending || isInvalidImage} aria-disabled={isPending || isInvalidImage}>Create Customer</Button>
         </div>
       </div>
 
